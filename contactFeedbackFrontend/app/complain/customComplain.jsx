@@ -14,6 +14,8 @@ import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import axios from "axios";
+import * as mime from "mime";
 
 export default function CustomComplain() {
   const router = useRouter();
@@ -26,6 +28,8 @@ export default function CustomComplain() {
   const [street, setStreet] = useState("");
   const [category, setCategory] = useState("");
   const [subcategory, setSubcategory] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
 
@@ -65,7 +69,13 @@ export default function CustomComplain() {
     "Health Post": ["No Staff Available", "Closed During Hours", "No Basic Medicines"],
   };
 
-  // ✅ Fixed Document Picker
+  // Normalize URI
+  const normalizeUri = (uri) => {
+    if (!uri) return null;
+    return uri.startsWith("file://") ? uri : "file://" + uri;
+  };
+
+  // Document Picker
   const pickDocument = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -74,18 +84,8 @@ export default function CustomComplain() {
         multiple: false,
       });
 
-      // Handles both new & old Expo versions
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setSelectedFile({
-          name: result.assets[0].name || "Unnamed File",
-          uri: result.assets[0].uri,
-        });
-        Alert.alert("Success", "File uploaded successfully!");
-      } else if (result.type === "success") {
-        setSelectedFile({
-          name: result.name || "Unnamed File",
-          uri: result.uri,
-        });
+      if (!result.canceled && result.assets?.length > 0) {
+        setSelectedFile(result.assets[0]);
         Alert.alert("Success", "File uploaded successfully!");
       }
     } catch (error) {
@@ -102,52 +102,81 @@ export default function CustomComplain() {
       quality: 1,
     });
     if (!result.canceled) {
-      setSelectedImage(result.assets[0].uri);
+      setSelectedImage(result.assets[0]);
       Alert.alert("Success", "Image uploaded successfully!");
     }
   };
 
   // Submit handler
-  const handleSubmit = () => {
-    if (!state || !district || !municipality || !ward || !category || !subcategory) {
+  const handleSubmit = async () => {
+    if (!state || !district || !municipality || !ward || !category || !subcategory || !title || !description) {
       Alert.alert("Error", "Please fill all required fields.");
       return;
     }
-    Alert.alert("Success", "Complaint submitted successfully!");
-    router.push('./complainSuccess');
+
+    let formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("state", state);
+    formData.append("district", district);
+    formData.append("municipality", municipality);
+    formData.append("ward_number", Number(ward));
+    formData.append("street_address", street);
+    formData.append("category", category);
+    formData.append("subcategory", subcategory);
+
+    // File
+    if (selectedFile) {
+      formData.append("file", {
+        uri: normalizeUri(selectedFile.uri),
+        name: selectedFile.name || "document.pdf",
+        type: mime.getType(selectedFile.name || selectedFile.uri) || "application/octet-stream",
+      });
+    }
+
+    // Image
+    if (selectedImage) {
+      formData.append("image", {
+        uri: normalizeUri(selectedImage.uri),
+        name: selectedImage.fileName || "photo.jpg",
+        type: mime.getType(selectedImage.uri) || "image/jpeg",
+      });
+    }
+
+    try {
+      await axios.post("http://127.0.0.1:8000/api/complains/", formData, {
+        headers: { Accept: "application/json" }, // Don't set multipart manually
+      });
+      Alert.alert("Success", "Complain submitted successfully!");
+      router.push("/");
+    } catch (error) {
+      console.log("Upload Error:", error.response?.data || error.message);
+      Alert.alert("Error", "Failed to submit complain. Check logs for details.");
+    }
   };
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
-        <Ionicons name="arrow-back" size={24} onPress={() => router.push('./addComplain')} />
+        <Ionicons name="arrow-back" size={24} onPress={() => router.push("./addComplain")} />
         <Text style={styles.headerTitle}>Add Custom Complain</Text>
       </View>
 
-      {/* ✅ Home Button */}
-      <TouchableOpacity
-        style={{ marginLeft: "auto", marginTop: -44 }}
-        onPress={() => router.push('/')}   // Change './home' to your actual home route
-      >
-        <Ionicons
-          name="home"
-          size={24}
-          color="#007bff"
-        />
+      <TouchableOpacity style={{ marginLeft: "auto", marginTop: -44 }} onPress={() => router.push("/")}>
+        <Ionicons name="home" size={24} color="#007bff" />
       </TouchableOpacity>
+
+      {/* Title Input */}
+      <Text style={styles.label}>Title *</Text>
+      <TextInput style={styles.input} placeholder="Enter Complain Title" value={title} onChangeText={setTitle} />
+
+      {/* Description Input */}
+      <Text style={styles.label}>Description *</Text>
+      <TextInput style={styles.input} placeholder="Enter Complain Description" value={description} onChangeText={setDescription} multiline />
 
       {/* State Dropdown */}
       <Text style={styles.label}>State *</Text>
-      <Picker
-        selectedValue={state}
-        onValueChange={(value) => {
-          setState(value);
-          setDistrict("");
-          setMunicipality("");
-        }}
-        style={styles.input}
-      >
+      <Picker selectedValue={state} onValueChange={(value) => { setState(value); setDistrict(""); setMunicipality(""); }} style={styles.input}>
         <Picker.Item label="Select State" value="" />
         {stateData.map((item, idx) => (
           <Picker.Item key={idx} label={item} value={item} />
@@ -158,14 +187,7 @@ export default function CustomComplain() {
       {state ? (
         <>
           <Text style={styles.label}>District *</Text>
-          <Picker
-            selectedValue={district}
-            onValueChange={(value) => {
-              setDistrict(value);
-              setMunicipality("");
-            }}
-            style={styles.input}
-          >
+          <Picker selectedValue={district} onValueChange={(value) => { setDistrict(value); setMunicipality(""); }} style={styles.input}>
             <Picker.Item label="Select District" value="" />
             {districtData[state].map((item, idx) => (
               <Picker.Item key={idx} label={item} value={item} />
@@ -178,11 +200,7 @@ export default function CustomComplain() {
       {district ? (
         <>
           <Text style={styles.label}>Municipality *</Text>
-          <Picker
-            selectedValue={municipality}
-            onValueChange={(value) => setMunicipality(value)}
-            style={styles.input}
-          >
+          <Picker selectedValue={municipality} onValueChange={(itemValue) => setMunicipality(itemValue)} style={styles.input}>
             <Picker.Item label="Select Municipality" value="" />
             {municipalityData[district].map((item, idx) => (
               <Picker.Item key={idx} label={item} value={item} />
@@ -193,30 +211,15 @@ export default function CustomComplain() {
 
       {/* Ward Input */}
       <Text style={styles.label}>Ward No *</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Ward Number"
-        value={ward}
-        onChangeText={setWard}
-        keyboardType="numeric"
-      />
+      <TextInput style={styles.input} placeholder="Enter Ward Number" value={ward} onChangeText={setWard} keyboardType="numeric" />
 
       {/* Street Input */}
       <Text style={styles.label}>Street Address (Optional)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Street Address"
-        value={street}
-        onChangeText={setStreet}
-      />
+      <TextInput style={styles.input} placeholder="Enter Street Address" value={street} onChangeText={setStreet} />
 
       {/* Category Picker */}
       <Text style={styles.label}>Category *</Text>
-      <Picker
-        selectedValue={category}
-        onValueChange={(itemValue) => setCategory(itemValue)}
-        style={styles.input}
-      >
+      <Picker selectedValue={category} onValueChange={(itemValue) => setCategory(itemValue)} style={styles.input}>
         <Picker.Item label="Select Category" value="" />
         <Picker.Item label="Medicines" value="Medicines" />
         <Picker.Item label="Hospitals" value="Hospitals" />
@@ -227,11 +230,7 @@ export default function CustomComplain() {
       {category ? (
         <>
           <Text style={styles.label}>Subcategory *</Text>
-          <Picker
-            selectedValue={subcategory}
-            onValueChange={(itemValue) => setSubcategory(itemValue)}
-            style={styles.input}
-          >
+          <Picker selectedValue={subcategory} onValueChange={(itemValue) => setSubcategory(itemValue)} style={styles.input}>
             <Picker.Item label="Select Subcategory" value="" />
             {subCategories[category].map((item, index) => (
               <Picker.Item key={index} label={item} value={item} />
@@ -245,15 +244,10 @@ export default function CustomComplain() {
       <TouchableOpacity style={styles.uploadButton} onPress={pickDocument}>
         <Text style={styles.uploadText}>📄 Choose File</Text>
       </TouchableOpacity>
-
       {selectedFile && (
         <View style={styles.fileConfirmationBox}>
           <Ionicons name="checkmark-circle" size={20} color="white" />
-          <Text style={styles.fileConfirmationText}>
-            {selectedFile.name
-              ? `Uploaded: ${selectedFile.name}`
-              : "✅ File uploaded successfully"}
-          </Text>
+          <Text style={styles.fileConfirmationText}>Uploaded: {selectedFile.name || "File selected"}</Text>
         </View>
       )}
 
@@ -262,7 +256,7 @@ export default function CustomComplain() {
       <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
         <Text style={styles.uploadText}>🖼️ Choose Image</Text>
       </TouchableOpacity>
-      {selectedImage && <Image source={{ uri: selectedImage }} style={styles.imagePreview} />}
+      {selectedImage && <Image source={{ uri: selectedImage.uri }} style={styles.imagePreview} />}
 
       {/* Submit Button */}
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
