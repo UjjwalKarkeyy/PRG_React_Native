@@ -15,7 +15,14 @@ import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import axios from "axios";
-import * as mime from "mime";
+
+// ✅ Helper function to guess mime type
+const getMimeType = (fileUri) => {
+  if (fileUri.endsWith(".png")) return "image/png";
+  if (fileUri.endsWith(".jpg") || fileUri.endsWith(".jpg")) return "image/jpg";
+  if (fileUri.endsWith(".pdf")) return "application/pdf";
+  return "application/octet-stream";
+};
 
 export default function CustomComplain() {
   const router = useRouter();
@@ -96,6 +103,12 @@ export default function CustomComplain() {
 
   // Image Picker
   const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission required", "Please allow access to media library");
+      return;
+    }
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -125,28 +138,31 @@ export default function CustomComplain() {
     formData.append("category", category);
     formData.append("subcategory", subcategory);
 
-    // File
+    // File Upload
     if (selectedFile) {
       formData.append("file", {
         uri: normalizeUri(selectedFile.uri),
         name: selectedFile.name || "document.pdf",
-        type: mime.getType(selectedFile.name || selectedFile.uri) || "application/octet-stream",
+        type: selectedFile.mimeType || getMimeType(selectedFile.uri),
       });
     }
 
-    // Image
+    // Image Upload
     if (selectedImage) {
-      formData.append("image", {
+      formData.append("complaint_images", {
         uri: normalizeUri(selectedImage.uri),
         name: selectedImage.fileName || "photo.jpg",
-        type: mime.getType(selectedImage.uri) || "image/jpeg",
+        type: selectedImage.mimeType || getMimeType(selectedImage.uri),
       });
     }
 
     try {
       await axios.post("http://127.0.0.1:8000/api/complains/", formData, {
-        headers: { Accept: "application/json" }, // Don't set multipart manually
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
+
       Alert.alert("Success", "Complain submitted successfully!");
       router.push("/");
     } catch (error) {
