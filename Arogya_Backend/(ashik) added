@@ -1,0 +1,78 @@
+[33mcommit 5465c9a49bc4ee989c5f083d576d20e3ab587d55[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Merge: 30bfc0d 972110a
+Author: UjjwalKarkeyy <156454258+UjjwalKarkeyy@users.noreply.github.com>
+Date:   Fri Aug 15 07:07:39 2025 +0545
+
+    Merge pull request #2 from UjjwalKarkeyy/doctors
+    
+    doctors added
+
+[33mcommit 972110af1a76c8e4fc20087a5067047ac45019c2[m
+Author: Aashik99-art <aashikjha577@gmail.com>
+Date:   Fri Aug 15 06:54:07 2025 +0545
+
+    doctors added
+
+[33mcommit 30bfc0d8704a3508060743fa1c838572a280b6b5[m
+Author: UjjwalKarkeyy <ujjwalkarki.official@gmail.com>
+Date:   Thu Aug 14 21:27:30 2025 +0545
+
+    doctors (ashik) added
+
+[33mcommit 0198fece5c29a6b9db3bb5b8eb17dd8edc248c99[m
+Author: UjjwalKarkeyy <ujjwalkarki.official@gmail.com>
+Date:   Thu Aug 14 20:10:29 2025 +0545
+
+    health education added
+
+[33mcommit 49b1f1d5ae11af52cbee0c72787ab57deb633889[m
+Author: UjjwalKarkeyy <ujjwalkarki.official@gmail.com>
+Date:   Wed Aug 13 09:31:32 2025 +0545
+
+    requirements txt updated
+
+[33mcommit 8bd90ec30f9054a47741c4aa2d401606fb9f4972[m
+Author: UjjwalKarkeyy <ujjwalkarki.official@gmail.com>
+Date:   Wed Aug 13 09:27:45 2025 +0545
+
+    backend modified to include complainFeedback
+
+[33mcommit 821bd0e4e36c9306f4514678314d2428c3db6994[m
+Merge: 907c4c8 5336733
+Author: UjjwalKarkeyy <156454258+UjjwalKarkeyy@users.noreply.github.com>
+Date:   Wed Aug 13 06:49:02 2025 +0545
+
+    Merge pull request #1 from iigal/main
+    
+    managed folder structure and created readme.md
+
+[33mcommit 5336733298a5833edc28a94f461b92cd624953f0[m
+Merge: 2830af0 d9a20b9
+Author: Shashank Shree Neupane <shashank@Shashanks-MacBook-Pro.local>
+Date:   Wed Aug 13 06:46:08 2025 +0545
+
+    Merge branch 'main' of https://github.com/iigal/Arogya_Backend
+
+[33mcommit 2830af091eaa61b0ce48811ad5924a353cb189ab[m
+Author: Shashank Shree Neupane <shashank@Shashanks-MacBook-Pro.local>
+Date:   Wed Aug 13 06:42:00 2025 +0545
+
+    added complain app
+
+[33mcommit d9a20b9af07bd874e002f2b8a27c511152270501[m
+Author: Shashank Shree Neupane <shashank@neupane.com.np>
+Date:   Mon Aug 11 08:46:10 2025 +0545
+
+    Create README.md
+
+[33mcommit 455c08d7ee3a92aecac045ca90e3ebce052fee52[m
+Author: Shashank Shree Neupane <shashank@Shashanks-MacBook-Pro.local>
+Date:   Mon Aug 11 08:31:49 2025 +0545
+
+    Managed file path to add new app
+
+[33mcommit 907c4c8f128d753d6678d8a90c1516484e8683cf[m
+Author: UjjwalKarkeyy <ujjwalkarki.official@gmail.com>
+Date:   Mon Aug 11 07:41:47 2025 +0545
+
+    first commit
