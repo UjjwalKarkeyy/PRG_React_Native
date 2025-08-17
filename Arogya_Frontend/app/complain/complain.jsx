@@ -1,6 +1,7 @@
-import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList } from "react-native";
+import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, Platform } from "react-native";
 import { useRouter } from "expo-router";
-import axios from 'axios';
+import axios from "axios";
+import { API_ENDPOINTS } from "../../config/api";
 import Feather from '@expo/vector-icons/Feather';
 import React, { useEffect, useState } from 'react'
 
@@ -9,7 +10,7 @@ export default function Complain() {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    axios.get('http://127.0.0.1:8000/api/complains/')
+    axios.get(API_ENDPOINTS.COMPLAINS)
       .then(response => setData(response.data))
       .catch(error => console.log(error))
   }, [])
@@ -18,11 +19,17 @@ export default function Complain() {
     <View style={styles.container}>
       {data.length === 0 ? (
         <>
-          <Image
-            source={require("../../assets/images/undraw_no-data_ig65.svg")} // Use .png if svg not supported
-            style={styles.image}
-            resizeMode="contain"
-          />
+          {Platform.OS === 'web' ? (
+            <Image
+              source={require("../../assets/images/undraw_no-data_ig65.svg")}
+              style={styles.image}
+              resizeMode="contain"
+            />
+          ) : (
+            <View style={[styles.image, { backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center' }]}>
+              <Text style={{ fontSize: 48, color: '#ccc' }}>📊</Text>
+            </View>
+          )}
           <Text style={styles.noDataText}>No Data Found</Text>
           <Text style={styles.subText}>We could not find any data</Text>
         </>
@@ -50,8 +57,8 @@ export default function Complain() {
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push("./addComplain")}
+          style={styles.addButton}
+          onPress={() => router.push("./customComplain")}
         >
           <Text style={styles.buttonText}>Add Complain</Text>
         </TouchableOpacity>
@@ -64,53 +71,88 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: 10
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
-  image: { width: 150, height: 150, marginBottom: 20 },
-  noDataText: { fontSize: 18, fontWeight: "bold", marginBottom: 5 },
-  subText: { fontSize: 14, color: "#666", marginBottom: 20 },
-  button: { backgroundColor: "blue", paddingVertical: 12, paddingHorizontal: 20, borderRadius: 8 },
-  buttonText: { color: "#fff", fontWeight: "bold" },
+  image: {
+    width: 150,
+    height: 150,
+    marginBottom: 20,
+    alignSelf: "center",
+  },
+  noDataText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 8,
+    textAlign: "center",
+    color: "#333",
+  },
+  subText: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 24,
+    textAlign: "center",
+  },
+  button: {
+    backgroundColor: "#007bff",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
   card: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    width: "100%",
-    paddingVertical: 12,
-    paddingHorizontal: 15,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginHorizontal: -16,
     borderBottomWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#e0e0e0",
+    backgroundColor: "#fff",
   },
   icon: {
     width: 24,
     height: 24,
-    marginRight: 10,
+    marginRight: 12,
   },
   title: {
     fontSize: 16,
     fontWeight: "600",
+    color: "#333",
+    marginBottom: 4,
   },
   date: {
     fontSize: 12,
-    color: "#999",
+    color: "#666",
   },
   details: {
-    color: "blue",
-    textDecorationLine: "underline",
+    color: "#007bff",
+    fontSize: 14,
+    fontWeight: "500",
   },
   buttonContainer: {
     position: "absolute",
-    bottom: 20,
-    left: 0,
-    right: 0,
+    bottom: 24,
+    left: 16,
+    right: 16,
     alignItems: "center",
   },
-  button: {
-    backgroundColor: "blue",
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 8,
-    width: "90%",
+  addButton: {
+    backgroundColor: "#007bff",
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    width: "100%",
     alignItems: "center",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
 })

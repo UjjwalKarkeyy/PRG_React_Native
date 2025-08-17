@@ -10,12 +10,14 @@ import {
   Alert,
   Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from "@react-native-picker/picker";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import axios from "axios";
+import { API_ENDPOINTS } from "../../config/api";
 
 // ✅ Helper function to guess mime type
 const getMimeType = (fileUri) => {
@@ -57,18 +59,28 @@ export default function CustomComplain() {
   };
 
   const municipalityData = {
+    // Province 1
     Morang: ["Biratnagar", "Belbari", "Pathari"],
     Sunsari: ["Inaruwa", "Itahari"],
     Jhapa: ["Birtamod", "Damak"],
+    // Province 2
+    Parsa: ["Birgunj", "Pokhariya", "Parsagadhi"],
+    Bara: ["Kalaiya", "Jitpur Simara", "Kolhabi"],
+    Dhanusha: ["Janakpur", "Chhireshwarnath", "Mithila"],
+    // Bagmati
     Kathmandu: ["Kathmandu Metro", "Kirtipur", "Tokha"],
     Bhaktapur: ["Bhaktapur Municipality", "Madhyapur Thimi"],
     Lalitpur: ["Lalitpur Metro", "Godawari"],
+    // Gandaki
     Kaski: ["Pokhara", "Machhapuchhre"],
     Lamjung: ["Besisahar"],
+    // Lumbini
     Rupandehi: ["Butwal", "Devdaha"],
     Dang: ["Ghorahi", "Tulsipur"],
+    // Karnali
     Surkhet: ["Birendranagar"],
     Dailekh: ["Narayan Municipality"],
+    // Sudurpashchim
     Kailali: ["Dhangadhi", "Tikapur"],
     Kanchanpur: ["Bhimdatta", "Krishnapur"],
   };
@@ -203,7 +215,7 @@ export default function CustomComplain() {
         imageInfo: selectedImage ? { name: selectedImage.fileName || selectedImage.name, type: selectedImage.mimeType || selectedImage.type } : null
       });
 
-      const response = await axios.post("http://127.0.0.1:8000/api/complains/", formData, {
+      const response = await axios.post(API_ENDPOINTS.COMPLAINS, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -236,15 +248,17 @@ export default function CustomComplain() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <Ionicons name="arrow-back" size={24} onPress={() => router.push("./addComplain")} />
-        <Text style={styles.headerTitle}>Add Custom Complain</Text>
+        <TouchableOpacity onPress={() => router.push("./complainAndFeedback")}>
+          <Ionicons name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Add Complain</Text>
+        <TouchableOpacity onPress={() => router.push("/")}>
+          <Ionicons name="home" size={24} color="#007bff" />
+        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity style={{ marginLeft: "auto", marginTop: -44 }} onPress={() => router.push("/")}>
-        <Ionicons name="home" size={24} color="#007bff" />
-      </TouchableOpacity>
+      <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
 
       {/* Title Input */}
       <Text style={styles.label}>Title *</Text>
@@ -269,9 +283,9 @@ export default function CustomComplain() {
           <Text style={styles.label}>District *</Text>
           <Picker selectedValue={district} onValueChange={(value) => { setDistrict(value); setMunicipality(""); }} style={styles.input}>
             <Picker.Item label="Select District" value="" />
-            {districtData[state].map((item, idx) => (
+            {districtData[state]?.map((item, idx) => (
               <Picker.Item key={idx} label={item} value={item} />
-            ))}
+            )) || []}
           </Picker>
         </>
       ) : null}
@@ -282,9 +296,9 @@ export default function CustomComplain() {
           <Text style={styles.label}>Municipality *</Text>
           <Picker selectedValue={municipality} onValueChange={(itemValue) => setMunicipality(itemValue)} style={styles.input}>
             <Picker.Item label="Select Municipality" value="" />
-            {municipalityData[district].map((item, idx) => (
+            {municipalityData[district]?.map((item, idx) => (
               <Picker.Item key={idx} label={item} value={item} />
-            ))}
+            )) || []}
           </Picker>
         </>
       ) : null}
@@ -312,9 +326,9 @@ export default function CustomComplain() {
           <Text style={styles.label}>Subcategory *</Text>
           <Picker selectedValue={subcategory} onValueChange={(itemValue) => setSubcategory(itemValue)} style={styles.input}>
             <Picker.Item label="Select Subcategory" value="" />
-            {subCategories[category].map((item, index) => (
+            {subCategories[category]?.map((item, index) => (
               <Picker.Item key={index} label={item} value={item} />
-            ))}
+            )) || []}
           </Picker>
         </>
       ) : null}
@@ -342,36 +356,80 @@ export default function CustomComplain() {
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitText}>Submit Complain</Text>
       </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#fff" },
-  header: { flexDirection: "row", alignItems: "center", marginBottom: 20 },
-  headerTitle: { fontSize: 18, fontWeight: "bold", marginLeft: 10 },
-  label: { marginTop: 10, fontWeight: "bold" },
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    flex: 1,
+    textAlign: "center",
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 30,
+  },
+  label: {
+    marginTop: 16,
+    marginBottom: 6,
+    fontWeight: "bold",
+    fontSize: 16,
+    color: "#333",
+  },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
-    padding: 10,
-    marginTop: 5,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: "#fafafa",
+    minHeight: 48,
   },
   uploadButton: {
     backgroundColor: "#007bff",
-    padding: 10,
-    borderRadius: 6,
+    padding: 12,
+    borderRadius: 8,
     alignItems: "center",
-    marginTop: 5,
+    marginTop: 8,
+    minHeight: 48,
   },
-  uploadText: { color: "#fff" },
+  uploadText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
+  },
   fileConfirmationBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "green",
-    padding: 10,
-    borderRadius: 6,
+    backgroundColor: "#28a745",
+    padding: 12,
+    borderRadius: 8,
     marginTop: 8,
   },
   fileConfirmationText: {
@@ -379,14 +437,29 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontWeight: "bold",
   },
-  imagePreview: { width: 100, height: 100, marginTop: 5, borderRadius: 6 },
-  submitButton: {
-    backgroundColor: "blue",
-    padding: 15,
-    borderRadius: 6,
-    alignItems: "center",
-    marginTop: 20,
-    marginBottom: 30,
+  imagePreview: {
+    width: "100%",
+    height: 200,
+    marginTop: 8,
+    borderRadius: 8,
+    resizeMode: "cover",
   },
-  submitText: { color: "#fff", fontWeight: "bold" },
+  submitButton: {
+    backgroundColor: "#007bff",
+    padding: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 24,
+    minHeight: 52,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  submitText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 18,
+  },
 });

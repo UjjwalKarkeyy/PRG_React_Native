@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Complain from "./complain";
 import Feedback from "../feedback/feedback";
 
@@ -9,7 +10,7 @@ export default function ComplainAndFeedback() {
   const router = useRouter();
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
+    <SafeAreaView style={styles.safeArea}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.push('/')}>
@@ -36,22 +37,58 @@ export default function ComplainAndFeedback() {
 
       {/* Tab Screens */}
       {tab === "complain" ? <Complain /> : <Feedback />}
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#e0e0e0",
+    backgroundColor: "#fff",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
-  backArrow: { fontSize: 22, marginRight: 10 },
-  title: { fontSize: 18, fontWeight: "bold" },
-  tabContainer: { flexDirection: "row", borderBottomWidth: 1, borderColor: "#ddd" },
-  tab: { flex: 1, padding: 12, alignItems: "center" },
-  activeTab: { borderBottomWidth: 2, borderColor: "blue" },
-  tabText: { fontWeight: "600" },
+  backArrow: {
+    fontSize: 22,
+    marginRight: 12,
+    color: "#333",
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  tabContainer: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderColor: "#e0e0e0",
+    backgroundColor: "#fff",
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    alignItems: "center",
+  },
+  activeTab: {
+    borderBottomWidth: 3,
+    borderColor: "#007bff",
+  },
+  tabText: {
+    fontWeight: "600",
+    fontSize: 16,
+    color: "#666",
+  },
 });

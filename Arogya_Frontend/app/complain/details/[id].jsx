@@ -11,9 +11,11 @@ import {
   RefreshControl,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import { API_ENDPOINTS, API_BASE_URL } from '../../../config/api';
 
 export default function ComplainDetails() {
   const { id } = useLocalSearchParams();
@@ -28,7 +30,8 @@ export default function ComplainDetails() {
   // Fetch complaint details
   const fetchComplaintDetails = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/complains/${id}/`);
+      const apiUrl = `${API_BASE_URL}/api/complains/${id}/`;
+      const response = await axios.get(apiUrl);
       setComplaint(response.data);
       setLoading(false);
     } catch (error) {
@@ -41,7 +44,8 @@ export default function ComplainDetails() {
   // Fetch comments from backend
   const fetchComments = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/complains/${id}/comments/`);
+      const apiUrl = `${API_BASE_URL}/api/complains/${id}/comments/`;
+      const response = await axios.get(apiUrl);
       setComments(response.data);
     } catch (error) {
       console.log('Error fetching comments:', error);
@@ -65,8 +69,9 @@ export default function ComplainDetails() {
         parent: replyTo
       };
 
+      const apiUrl = `${API_BASE_URL}/api/complains/${id}/add_comment/`;
       const response = await axios.post(
-        `http://127.0.0.1:8000/api/complains/${id}/add_comment/`,
+        apiUrl,
         commentData,
         {
           headers: {
@@ -77,7 +82,7 @@ export default function ComplainDetails() {
 
       // Refresh comments to get updated data with proper structure
       await fetchComments();
-      
+
       setNewComment('');
       setReplyTo(null);
       Alert.alert('Success', 'Comment added successfully');
@@ -134,15 +139,15 @@ export default function ComplainDetails() {
         </View>
         <Text style={styles.commentText}>{comment.text}</Text>
         {!isReply && (
-          <TouchableOpacity 
-            style={styles.replyButton} 
+          <TouchableOpacity
+            style={styles.replyButton}
             onPress={() => setReplyTo(comment.id)}
           >
             <Ionicons name="arrow-undo" size={16} color="#007bff" />
             <Text style={styles.replyButtonText}>Reply</Text>
           </TouchableOpacity>
         )}
-        
+
         {/* Render replies */}
         {comment.replies && comment.replies.map(reply => renderComment(reply, true))}
       </View>
@@ -160,131 +165,148 @@ export default function ComplainDetails() {
   const statusInfo = getStatusInfo(complaint.status);
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Complaint Details</Text>
-      </View>
-
-      {/* Complaint Details Card */}
-      <View style={styles.detailsCard}>
-        <View style={styles.statusContainer}>
-          <Ionicons name={statusInfo.icon} size={20} color={statusInfo.color} />
-          <Text style={[styles.statusText, { color: statusInfo.color }]}>
-            {statusInfo.text}
-          </Text>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        style={styles.container}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Complaint Details</Text>
         </View>
-        
-        <Text style={styles.title}>{complaint.title}</Text>
-        <Text style={styles.description}>{complaint.description}</Text>
-        
-        <View style={styles.metaInfo}>
-          <View style={styles.metaRow}>
-            <Ionicons name="location" size={16} color="#666" />
-            <Text style={styles.metaText}>
-              {complaint.municipality}, {complaint.district}, {complaint.state}
+
+        {/* Complaint Details Card */}
+        <View style={styles.detailsCard}>
+          <View style={styles.statusContainer}>
+            <Ionicons name={statusInfo.icon} size={20} color={statusInfo.color} />
+            <Text style={[styles.statusText, { color: statusInfo.color }]}>
+              {statusInfo.text}
             </Text>
           </View>
-          <View style={styles.metaRow}>
-            <Ionicons name="pricetag" size={16} color="#666" />
-            <Text style={styles.metaText}>{complaint.category} - {complaint.subcategory}</Text>
-          </View>
-          <View style={styles.metaRow}>
-            <Ionicons name="calendar" size={16} color="#666" />
-            <Text style={styles.metaText}>
-              Submitted: {complaint.created_at ? formatDate(complaint.created_at) : 'N/A'}
-            </Text>
-          </View>
-        </View>
 
-        {/* Attachments */}
-        {(complaint.image || complaint.file) && (
-          <View style={styles.attachmentsSection}>
-            <Text style={styles.sectionTitle}>Attachments</Text>
-            {complaint.image && (
-              <Image source={{ uri: complaint.image }} style={styles.attachedImage} />
-            )}
-            {complaint.file && (
-              <TouchableOpacity style={styles.fileAttachment}>
-                <Ionicons name="document" size={20} color="#007bff" />
-                <Text style={styles.fileName}>Attached Document</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-      </View>
+          <Text style={styles.title}>{complaint.title}</Text>
+          <Text style={styles.description}>{complaint.description}</Text>
 
-      {/* Progress Timeline */}
-      <View style={styles.timelineCard}>
-        <Text style={styles.sectionTitle}>Progress Timeline</Text>
-        <View style={styles.timelineItem}>
-          <View style={[styles.timelineDot, { backgroundColor: '#28a745' }]} />
-          <View style={styles.timelineContent}>
-            <Text style={styles.timelineTitle}>Complaint Submitted</Text>
-            <Text style={styles.timelineDate}>
-              {complaint.created_at ? formatDate(complaint.created_at) : 'N/A'}
-            </Text>
+          <View style={styles.metaInfo}>
+            <View style={styles.metaRow}>
+              <Ionicons name="location" size={16} color="#666" />
+              <Text style={styles.metaText}>
+                {complaint.municipality}, {complaint.district}, {complaint.state}
+              </Text>
+            </View>
+            <View style={styles.metaRow}>
+              <Ionicons name="pricetag" size={16} color="#666" />
+              <Text style={styles.metaText}>{complaint.category} - {complaint.subcategory}</Text>
+            </View>
+            <View style={styles.metaRow}>
+              <Ionicons name="calendar" size={16} color="#666" />
+              <Text style={styles.metaText}>
+                Submitted: {complaint.created_at ? formatDate(complaint.created_at) : 'N/A'}
+              </Text>
+            </View>
           </View>
-        </View>
-        
-        {/* Mock timeline items - replace with actual data */}
-        <View style={styles.timelineItem}>
-          <View style={[styles.timelineDot, { backgroundColor: '#17a2b8' }]} />
-          <View style={styles.timelineContent}>
-            <Text style={styles.timelineTitle}>Under Review</Text>
-            <Text style={styles.timelineDate}>Jan 10, 2024 10:30 AM</Text>
-          </View>
-        </View>
-      </View>
 
-      {/* Comments Section */}
-      <View style={styles.commentsCard}>
-        <Text style={styles.sectionTitle}>Comments & Updates</Text>
-        
-        {comments.length === 0 ? (
-          <Text style={styles.noCommentsText}>No comments yet. Be the first to comment!</Text>
-        ) : (
-          comments.map(comment => renderComment(comment))
-        )}
-        
-        {/* Comment Input */}
-        <View style={styles.commentInputContainer}>
-          {replyTo && (
-            <View style={styles.replyIndicator}>
-              <Text style={styles.replyIndicatorText}>Replying to comment</Text>
-              <TouchableOpacity onPress={() => setReplyTo(null)}>
-                <Ionicons name="close" size={16} color="#666" />
-              </TouchableOpacity>
+          {/* Attachments */}
+          {(complaint.image || complaint.file) && (
+            <View style={styles.attachmentsSection}>
+              <Text style={styles.sectionTitle}>Attachments</Text>
+              {complaint.image && (
+                <Image source={{ uri: complaint.image }} style={styles.attachedImage} />
+              )}
+              {complaint.file && (
+                <TouchableOpacity style={styles.fileAttachment}>
+                  <Ionicons name="document" size={20} color="#007bff" />
+                  <Text style={styles.fileName}>Attached Document</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
-          <View style={styles.inputRow}>
-            <TextInput
-              style={styles.commentInput}
-              placeholder={replyTo ? "Write a reply..." : "Add a comment..."}
-              value={newComment}
-              onChangeText={setNewComment}
-              multiline
-            />
-            <TouchableOpacity style={styles.sendButton} onPress={submitComment}>
-              <Ionicons name="send" size={20} color="white" />
-            </TouchableOpacity>
+        </View>
+
+        {/* Progress Timeline */}
+        <View style={styles.timelineCard}>
+          <Text style={styles.sectionTitle}>Progress Timeline</Text>
+          <View style={styles.timelineItem}>
+            <View style={[styles.timelineDot, { backgroundColor: '#28a745' }]} />
+            <View style={styles.timelineContent}>
+              <Text style={styles.timelineTitle}>Complaint Submitted</Text>
+              <Text style={styles.timelineDate}>
+                {complaint.created_at ? formatDate(complaint.created_at) : 'N/A'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Timeline for status changes */}
+          {complaint.status && complaint.status.toLowerCase() !== 'pending' ? (
+            <View style={styles.timelineItem}>
+              <View style={[styles.timelineDot, { backgroundColor: '#17a2b8' }]} />
+              <View style={styles.timelineContent}>
+                <Text style={styles.timelineTitle}>Under Review</Text>
+                <Text style={styles.timelineDate}>
+                  {complaint.updated_at ? formatDate(complaint.updated_at) : 'Status changed'}
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.timelineItem}>
+              <View style={[styles.timelineDot, { backgroundColor: '#dee2e6' }]} />
+              <View style={styles.timelineContent}>
+                <Text style={[styles.timelineTitle, { color: '#6c757d' }]}>Under Review</Text>
+                <Text style={[styles.timelineDate, { color: '#6c757d' }]}>Not seen yet</Text>
+              </View>
+            </View>
+          )}
+        </View>
+
+        {/* Comments Section */}
+        <View style={styles.commentsCard}>
+          <Text style={styles.sectionTitle}>Comments & Updates</Text>
+
+          {comments.length === 0 ? (
+            <Text style={styles.noCommentsText}>No comments yet. Be the first to comment!</Text>
+          ) : (
+            comments.map(comment => renderComment(comment))
+          )}
+
+          {/* Comment Input */}
+          <View style={styles.commentInputContainer}>
+            {replyTo && (
+              <View style={styles.replyIndicator}>
+                <Text style={styles.replyIndicatorText}>Replying to comment</Text>
+                <TouchableOpacity onPress={() => setReplyTo(null)}>
+                  <Ionicons name="close" size={16} color="#666" />
+                </TouchableOpacity>
+              </View>
+            )}
+            <View style={styles.inputRow}>
+              <TextInput
+                style={styles.commentInput}
+                placeholder={replyTo ? "Write a reply..." : "Add a comment..."}
+                value={newComment}
+                onChangeText={setNewComment}
+                multiline
+              />
+              <TouchableOpacity style={styles.sendButton} onPress={submitComment}>
+                <Ionicons name="send" size={20} color="white" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  container: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -295,10 +317,16 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   headerTitle: {
     fontSize: 18,

@@ -2,12 +2,14 @@ import React from "react";
 import { View, Text, StyleSheet, TextInput, Image, ScrollView, TouchableOpacity } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const router = useRouter();
 
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+      <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <View>
@@ -65,11 +67,12 @@ export default function HomeScreen() {
           <Text style={styles.appointmentType}>Depression</Text>
         </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-const DisabledService = ({ icon, label }) => (
+const DisabledService = ({ icon, label }: { icon: any; label: string }) => (
   <View style={[styles.serviceItem, { opacity: 0.4 }]}>
     <MaterialIcons name={icon} size={28} color="#999" />
     <Text style={styles.serviceLabel}>{label}</Text>

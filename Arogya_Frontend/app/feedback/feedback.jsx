@@ -7,10 +7,13 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  Image,
+  Platform,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 
 export default function CustomFeedback() {
   const router = useRouter();
@@ -25,6 +28,7 @@ export default function CustomFeedback() {
   const [subcategory, setSubcategory] = useState("");
   const [rating, setRating] = useState(null);
   const [remarks, setRemarks] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // Dummy Data
   const stateData = ["Province 1", "Province 2", "Bagmati", "Gandaki", "Lumbini", "Karnali", "Sudurpashchim"];
@@ -57,9 +61,28 @@ export default function CustomFeedback() {
   };
 
   const subCategories = {
-    Medicines: ["Availability", "Quality", "Pricing"],
-    Hospitals: ["Staff Behavior", "Facilities", "Cleanliness"],
-    "Health Post": ["Service Speed", "Basic Medicines", "Staff Availability"],
+    Medicines: ["Expired Medicines", "No Free Medicines", "Low Stock"],
+    Hospitals: ["Unavailability of Beds", "Mismanagement", "Poor Hygiene"],
+    "Health Post": ["No Staff Available", "Closed During Hours", "No Basic Medicines"],
+  };
+
+  // Image Picker
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission required", "Please allow access to media library");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0]);
+      Alert.alert("Success", "Image uploaded successfully!");
+    }
   };
 
   // Submit handler
@@ -104,9 +127,9 @@ export default function CustomFeedback() {
             style={styles.input}
           >
             <Picker.Item label="Select District" value="" />
-            {districtData[state].map((item, idx) => (
+            {districtData[state]?.map((item, idx) => (
               <Picker.Item key={idx} label={item} value={item} />
-            ))}
+            )) || []}
           </Picker>
         </>
       ) : null}
@@ -121,9 +144,9 @@ export default function CustomFeedback() {
             style={styles.input}
           >
             <Picker.Item label="Select Municipality" value="" />
-            {municipalityData[district].map((item, idx) => (
+            {municipalityData[district]?.map((item, idx) => (
               <Picker.Item key={idx} label={item} value={item} />
-            ))}
+            )) || []}
           </Picker>
         </>
       ) : null}
@@ -170,9 +193,9 @@ export default function CustomFeedback() {
             style={styles.input}
           >
             <Picker.Item label="Select Subcategory" value="" />
-            {subCategories[category].map((item, index) => (
+            {subCategories[category]?.map((item, index) => (
               <Picker.Item key={index} label={item} value={item} />
-            ))}
+            )) || []}
           </Picker>
         </>
       ) : null}
@@ -203,6 +226,22 @@ export default function CustomFeedback() {
         onChangeText={setRemarks}
         multiline
       />
+
+      {/* Image Upload */}
+      <Text style={styles.label}>Attach an Image (Optional)</Text>
+      <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+        <Text style={styles.uploadText}>🖼️ Choose Image</Text>
+      </TouchableOpacity>
+      {selectedImage && (
+        <Image 
+          source={{ uri: selectedImage.uri }} 
+          style={styles.imagePreview}
+          onError={(error) => {
+            console.log('Image load error:', error);
+            Alert.alert('Error', 'Failed to load image preview');
+          }}
+        />
+      )}
 
       {/* Submit Button */}
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
@@ -245,4 +284,24 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   submitText: { color: "#fff", fontWeight: "bold" },
+  uploadButton: {
+    backgroundColor: "#007bff",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+    minHeight: 48,
+  },
+  uploadText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  imagePreview: {
+    width: "100%",
+    height: 200,
+    marginTop: 8,
+    borderRadius: 8,
+    resizeMode: "cover",
+  },
 });

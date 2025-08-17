@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Stack, useRouter, Slot } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, Platform } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   const [loading, setLoading] = useState(true);
@@ -29,7 +30,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!loading) {
-      router.replace(initialRoute); // navigate only after loading
+      router.replace(initialRoute as any); // navigate only after loading
     }
   }, [loading]);
 
@@ -41,5 +42,9 @@ export default function RootLayout() {
     );
   }
 
-  return <Slot />;
+  return (
+    <SafeAreaProvider>
+      <Slot />
+    </SafeAreaProvider>
+  );
 }
